@@ -1,0 +1,47 @@
+# Source files
+src/
+tsconfig*.json
+
+# Development files
+.gitignore
+.npmignore
+README-AI.md
+
+# Build files
+*.tsbuildinfo
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Dependencies
+node_modules/
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+test/
+tests/
+__tests__/
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output
+
+# Environment
+.env*
+
+# Temporary files
+.tmp/
+.temp/
