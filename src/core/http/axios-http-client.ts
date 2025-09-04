@@ -14,7 +14,7 @@ const TIMEOUT = {
 export class AxiosHttpClient implements HttpClient {
   private readonly instance: AxiosInstance;
 
-  public constructor(baseURL: string, defaultTimeout = TIMEOUT.DEFAULT_MS) {
+  public constructor(baseURL: string, defaultTimeout: number = TIMEOUT.DEFAULT_MS) {
     this.instance = axios.create({
       baseURL,
       timeout: defaultTimeout,

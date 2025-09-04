@@ -62,13 +62,7 @@ export class RetryPolicy {
       return true; // Network errors are retryable
     }
 
-    return [
-      RETRYABLE_STATUS_CODES.REQUEST_TIMEOUT,
-      RETRYABLE_STATUS_CODES.TOO_MANY_REQUESTS,
-      RETRYABLE_STATUS_CODES.BAD_GATEWAY,
-      RETRYABLE_STATUS_CODES.SERVICE_UNAVAILABLE,
-      RETRYABLE_STATUS_CODES.GATEWAY_TIMEOUT,
-    ].includes(error.statusCode);
+    return (Object.values(RETRYABLE_STATUS_CODES) as number[]).includes(error.statusCode);
   }
 
   private calculateDelay(attempt: number): number {
