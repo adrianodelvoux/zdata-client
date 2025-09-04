@@ -11,10 +11,14 @@ A modern, type-safe TypeScript client library for the zdata backend API. Provide
 - **Pagination**: Built-in pagination support with metadata
 - **Search**: Integrated search functionality across resources
 - **Modern**: ES modules, async/await, and modern JavaScript patterns
-- **Zero Dependencies**: Only requires axios for HTTP requests
+- **Minimal Dependencies**: Only requires axios for HTTP requests
 - **Generic Types**: For type-safe data access
 - **Extensible Base Classes**: For custom data sources
-- **Request/Response Validation**:
+- **Request/Response Validation**: Runtime validation with Zod schemas
+- **Smart Caching**: In-memory cache with TTL and automatic invalidation
+- **Retry Logic**: Automatic retry with exponential backoff for failed requests
+- **Clean Architecture**: Modular design with separated concerns
+- **Developer Experience**: Full test coverage, linting, and type checking
 
 ## 📦 Installation
 
@@ -57,6 +61,34 @@ const client = createClient({
   baseUrl: "https://api.yourdomain.com",
   workspaceId: "your-workspace-id",
 });
+```
+
+### Advanced Configuration
+
+Enable caching and retry features for improved performance and reliability:
+
+```typescript
+import { ZDataClient } from "zdata-client";
+
+const client = new ZDataClient({
+  baseUrl: "https://api.yourdomain.com",
+  workspaceId: "your-workspace-id",
+  timeout: 10000,
+  
+  // Enable smart caching
+  enableCache: true,
+  cacheConfig: {
+    defaultTtlMs: 300000, // 5 minutes cache TTL
+    maxSize: 1000,        // Maximum cache entries
+  },
+  
+  // Enable automatic retry with backoff
+  enableRetry: true,
+});
+
+// Cache management
+client.clearCache();                    // Clear all cache
+const stats = client.getCacheStats();   // Get cache statistics
 ```
 
 ## 🔐 Authentication
@@ -430,6 +462,30 @@ try {
 
 ## 🔧 Advanced Usage
 
+### Runtime Validation
+
+The library now includes comprehensive runtime validation using Zod:
+
+```typescript
+import { Validator, ApiConfigSchema } from "zdata-client";
+
+// Validate configuration
+const config = {
+  baseUrl: "https://api.example.com",
+  workspaceId: "workspace-123",
+  timeout: 15000
+};
+
+try {
+  const validatedConfig = Validator.validate(ApiConfigSchema, config);
+  const client = new ZDataClient(validatedConfig);
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Config validation failed:', error.errors);
+  }
+}
+```
+
 ### Custom Headers
 
 ```typescript
@@ -438,7 +494,7 @@ const client = new ZDataClient({
   workspaceId: "workspace-id",
   headers: {
     "X-Custom-Header": "custom-value",
-    "X-Client-Version": "1.0.0",
+    "X-Client-Version": "2.0.0",
   },
 });
 ```
@@ -451,6 +507,28 @@ const client = new ZDataClient({
   workspaceId: "workspace-id",
   timeout: 30000, // 30 seconds
 });
+```
+
+### Cache Performance
+
+```typescript
+// Enable caching for better performance
+const client = new ZDataClient({
+  baseUrl: "https://api.yourdomain.com",
+  workspaceId: "workspace-id",
+  enableCache: true,
+  cacheConfig: {
+    defaultTtlMs: 600000, // 10 minutes
+    maxSize: 500
+  }
+});
+
+// Monitor cache performance
+const stats = client.getCacheStats();
+console.log(`Cache contains ${stats?.size} entries`);
+
+// Clear cache when needed
+client.clearCache();
 ```
 
 ### Pagination Helper
@@ -598,13 +676,73 @@ class AuthManager {
 }
 ```
 
+## 🧪 Development & Testing
+
+### Available Scripts
+
+```bash
+# Development
+npm run dev          # Watch mode with hot reload
+npm run build        # Build for production
+npm run clean        # Clean build artifacts
+
+# Code Quality
+npm run lint         # Run ESLint
+npm run lint:fix     # Fix ESLint issues
+npm run format       # Format code with Prettier
+npm run type-check   # TypeScript type checking
+
+# Testing
+npm test             # Run tests
+npm run test:coverage # Run tests with coverage
+```
+
+### Running Tests
+
+The library includes comprehensive unit tests:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Watch mode during development
+npm run dev
+```
+
+### Code Quality Standards
+
+This library follows strict quality standards:
+
+- ✅ **ESLint**: Rigorous TypeScript rules
+- ✅ **Prettier**: Consistent code formatting  
+- ✅ **Husky**: Pre-commit hooks
+- ✅ **Commitlint**: Conventional commit messages
+- ✅ **Vitest**: Modern testing framework
+- ✅ **Type Safety**: Strict TypeScript configuration
+
+### Contributing
+
+1. **Fork** the repository
+2. **Clone** your fork locally
+3. **Install** dependencies: `npm install`
+4. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+5. **Make** your changes with tests
+6. **Run** quality checks: `npm run lint && npm test`
+7. **Commit** using conventional commits: `git commit -m "feat: add amazing feature"`
+8. **Push** and create a **Pull Request**
+
+All contributions must pass:
+- Linting rules
+- Type checking
+- Unit tests (minimum 80% coverage)
+- Pre-commit hooks
+
 ## 📄 License
 
 MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📧 Support
 

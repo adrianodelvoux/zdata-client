@@ -1,130 +1,90 @@
-/**
- * @fileoverview zdata-client - TypeScript client library for zdata backend API
- *
- * A modern, type-safe client library providing authentication and full CRUD operations
- * for the zdata backend API with comprehensive error handling and developer experience.
- *
- * @version 1.0.0
- * @author zdata-client
- * @license MIT
- */
+// Main client export
+export { ZDataClient } from './services/zdata-client';
+export type { ZDataClientConfig } from './services/zdata-client';
 
-// =============================================================================
-// MAIN CLIENT EXPORT
-// =============================================================================
+// Legacy client for backward compatibility
+export { ZDataClient as ExternalApiClient } from './services/zdata-client';
 
-export {
-  ZDataClient,
-  ExternalApiClient, // Legacy alias for backward compatibility
-} from "./client.js";
+// Base classes for custom implementations
+export { BaseDataSourceClient, DataSourceClient } from './base/base-client';
+export type { CreateEntity, EntityWithBase } from './base/base-client';
 
-// =============================================================================
-// BASE CLIENT EXPORTS
-// =============================================================================
-
-export { BaseDataSourceClient, DataSourceClient } from "./base-client.js";
-
-// =============================================================================
-// TYPE EXPORTS
-// =============================================================================
-
+// Core types from validation schemas
 export type {
-  // Configuration types
   ApiConfig,
-  FindRecordsParams,
-
-  // Authentication types
   LoginRequest,
   RegisterRequest,
   AuthResponse,
-  User,
-
-  // Response types
-  PaginatedResponse,
-  PaginationMeta,
-
-  // Entity types
+  FindRecordsParams,
   BaseEntity,
-  CreateEntity,
-  EntityWithBase,
-
-  // Error types
+  PaginationMeta,
+  User,
   ApiError,
-  ValidationErrorDetail,
+} from './features/validation/schemas';
 
-  // Interface
-  IApiClient,
-} from "./types.js";
+// Repository types
+export type { PaginatedResponse } from './repositories/resource-repository';
 
-// =============================================================================
-// ERROR CLASS EXPORTS
-// =============================================================================
-
+// Error classes and type guards
 export {
-  // Error classes
   ApiClientError,
   InvalidCredentialsError,
   ValidationError,
-
-  // Type guards
   isApiClientError,
   isInvalidCredentialsError,
   isValidationError,
-} from "./types.js";
+} from './core/errors/api-errors';
 
-// =============================================================================
-// CONVENIENCE FACTORY FUNCTION
-// =============================================================================
+export type { ValidationErrorDetail } from './core/errors/api-errors';
 
-import { ZDataClient } from "./client.js";
-import type { ApiConfig } from "./types.js";
+// HTTP client interfaces for advanced usage
+export type {
+  HttpClient,
+  HttpRequest,
+  HttpResponse,
+} from './core/http/http-client.interface';
+export { AxiosHttpClient } from './core/http/axios-http-client';
 
-/**
- * Factory function to create a new zdata API client instance
- *
- * This is a convenience function that provides an alternative way to instantiate
- * the client without using the `new` keyword.
- *
- * @param config - Client configuration options
- * @returns A new ZDataClient instance
- * @throws {Error} When configuration is invalid
- *
- * @example
- * ```typescript
- * import { createClient } from 'zdata-client';
- *
- * const client = createClient({
- *   baseUrl: 'https://api.example.com',
- *   workspaceId: 'workspace-123'
- * });
- *
- * await client.login({ email: 'user@example.com', password: 'password' });
- * ```
- */
-export function createClient(config: ApiConfig): ZDataClient {
+// Cache interfaces for advanced usage
+export type {
+  Cache,
+  CacheConfig,
+  CacheStrategy,
+} from './features/cache/cache.interface';
+export { MemoryCache } from './features/cache/memory-cache';
+
+// Validation utilities
+export { Validator } from './features/validation/validator';
+export {
+  ApiConfigSchema,
+  LoginRequestSchema,
+  RegisterRequestSchema,
+  FindRecordsParamsSchema,
+  BaseEntitySchema,
+  PaginationMetaSchema,
+  AuthResponseSchema,
+  UserSchema,
+  ApiErrorSchema,
+} from './features/validation/schemas';
+
+// Retry utilities
+export { RetryPolicy } from './features/retry/retry-policy';
+export type { RetryConfig } from './features/retry/retry-policy';
+
+// API client interface for backward compatibility
+export type { IApiClient } from './interfaces/api-client.interface';
+
+// Factory function
+import { ZDataClient, type ZDataClientConfig } from './services/zdata-client';
+export function createClient(config: ZDataClientConfig): ZDataClient {
   return new ZDataClient(config);
 }
 
-/**
- * Legacy factory function name for backward compatibility
- * @deprecated Use createClient instead
- */
+// Legacy factory function
 export const createApiClient = createClient;
 
-// =============================================================================
-// VERSION EXPORT
-// =============================================================================
+// Version
+export const VERSION = '2.0.0';
 
-/**
- * Current version of the zdata-client library
- */
-export const VERSION = "1.0.0";
-
-// =============================================================================
-// DEFAULT EXPORT
-// =============================================================================
-
-/**
- * Default export - ZDataClient class
- */
+// Default export
 export default ZDataClient;

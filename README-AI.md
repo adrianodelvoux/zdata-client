@@ -4,7 +4,7 @@ This document provides AI assistants with the essential information needed to ge
 
 ## Library Overview
 
-`zdata-client` is a TypeScript client library for zdata backend API providing authentication and CRUD operations with full type safety.
+`zdata-client` is a modern TypeScript client library for zdata backend API providing authentication, CRUD operations, caching, retry logic, and comprehensive validation with full type safety.
 
 ## Installation
 
@@ -24,11 +24,29 @@ const client = new ZDataClient({
   baseUrl: string,
   workspaceId: string,
   timeout?: number,        // optional, default: 10000ms
-  headers?: Record<string, string>  // optional
+  headers?: Record<string, string>,  // optional
+  enableCache?: boolean,   // optional, enables smart caching
+  enableRetry?: boolean,   // optional, enables auto-retry
+  cacheConfig?: {          // optional cache configuration
+    defaultTtlMs: number,  // cache TTL in milliseconds
+    maxSize?: number       // max cache entries
+  }
 });
 
 // Factory function approach
 const client = createClient({ baseUrl, workspaceId });
+
+// Advanced setup with caching and retry
+const client = new ZDataClient({
+  baseUrl: 'https://api.example.com',
+  workspaceId: 'workspace-123',
+  enableCache: true,
+  enableRetry: true,
+  cacheConfig: {
+    defaultTtlMs: 300000,  // 5 minutes
+    maxSize: 1000
+  }
+});
 ```
 
 ### Authentication Methods
@@ -52,6 +70,10 @@ client.setAccessToken(token: string): void
 client.getAccessToken(): string | null
 client.isAuthenticated(): boolean
 client.logout(): void
+
+// Cache management (when enableCache: true)
+client.clearCache(): void
+client.getCacheStats(): { size: number } | null
 ```
 
 ### CRUD Operations
@@ -118,7 +140,13 @@ import {
   ValidationError,          // 400 errors with .errors array
   ApiClientError,          // General API errors with .statusCode
   isValidationError,       // Type guard
-  isApiClientError        // Type guard
+  isApiClientError,        // Type guard
+  isInvalidCredentialsError, // Type guard
+  Validator,               // Runtime validation utility
+  // Validation schemas
+  ApiConfigSchema,
+  LoginRequestSchema,
+  RegisterRequestSchema
 } from 'zdata-client';
 ```
 
@@ -202,19 +230,72 @@ do {
 } while (result.meta.hasNext);
 ```
 
+### Advanced Features
+
+```typescript
+// Runtime validation
+import { Validator, ApiConfigSchema } from 'zdata-client';
+
+const config = { baseUrl: 'https://api.example.com', workspaceId: 'ws-123' };
+const validConfig = Validator.validate(ApiConfigSchema, config);
+
+// Cache management
+const client = new ZDataClient({
+  baseUrl: 'https://api.example.com', 
+  workspaceId: 'workspace-123',
+  enableCache: true,
+  cacheConfig: { defaultTtlMs: 300000 }
+});
+
+// Cache operations
+client.clearCache();
+const stats = client.getCacheStats();
+console.log(`Cache has ${stats?.size} entries`);
+
+// Type-safe operations with generics
+interface User {
+  name: string;
+  email: string;
+}
+
+const user = await client.createRecord<User>('users', {
+  name: 'John Doe',
+  email: 'john@example.com'
+});
+// user has type: User & { id: string; created_at: string; updated_at: string }
+
+// Custom base client for specific resources
+import { BaseDataSourceClient } from 'zdata-client';
+
+class UserClient extends BaseDataSourceClient<User> {
+  constructor(config) {
+    super(config, 'users');
+  }
+  
+  async findByEmail(email: string) {
+    return this.find({ search: `email:${email}` });
+  }
+}
+```
+
 ## Resource Names
 
 The `resourceName` parameter accepts any string representing a backend resource (e.g., 'users', 'products', 'orders', 'custom-resource').
 
 ## Key Points for AI Code Generation
 
-1. **Type Safety**: All methods return typed promises, use `unknown` for flexible data types
-2. **Error Handling**: Always wrap API calls in try-catch blocks
+1. **Type Safety**: All methods return typed promises, use generics `<T>` for type-safe operations
+2. **Error Handling**: Always wrap API calls in try-catch blocks with proper type guards
 3. **Authentication**: Check `client.isAuthenticated()` before protected operations
 4. **Pagination**: Use `meta.hasNext` and `meta.hasPrev` for pagination logic
 5. **Resource Flexibility**: Any resource name string is valid
 6. **Token Management**: Implement token persistence for better UX
 7. **Validation**: ValidationError includes detailed error information in `.errors` array
+8. **Caching**: Enable with `enableCache: true` for better performance, manage with `clearCache()`
+9. **Retry Logic**: Enable with `enableRetry: true` for automatic retry on failed requests
+10. **Runtime Validation**: Use `Validator.validate()` for schema validation
+11. **Custom Clients**: Extend `BaseDataSourceClient<T>` for type-safe resource-specific clients
+12. **Configuration**: Use `ZDataClientConfig` type for advanced setup with cache/retry options
 
 ## Import Statement
 Always import from the main package:
