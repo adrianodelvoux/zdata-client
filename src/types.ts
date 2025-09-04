@@ -3,6 +3,34 @@
  */
 
 // =============================================================================
+// BASE ENTITY TYPES
+// =============================================================================
+
+/**
+ * Base entity metadata that gets added by the database
+ */
+export interface BaseEntity {
+  /** Unique identifier */
+  readonly id: string;
+  /** Creation timestamp */
+  readonly created_at: string;
+  /** Last update timestamp */
+  readonly updated_at: string;
+}
+
+/**
+ * Entity for creation (without database-generated fields)
+ * @template T - The entity type without base fields
+ */
+export type CreateEntity<T> = Omit<T, keyof BaseEntity>;
+
+/**
+ * Entity returned from database (with all metadata)
+ * @template T - The entity type
+ */
+export type EntityWithBase<T> = T & BaseEntity;
+
+// =============================================================================
 // PAGINATION TYPES
 // =============================================================================
 
@@ -187,28 +215,33 @@ export interface IApiClient {
   // CRUD methods
   /**
    * Create a new record in the specified resource
+   * @template T - The entity type to create
    * @param resourceName - Name of the resource
    * @param data - Record data to create
-   * @returns Promise resolving to the created record
+   * @returns Promise resolving to the created record with base entity fields
    * @throws {ValidationError} When record data is invalid
    * @throws {ApiClientError} When API request fails
    */
-  createRecord(resourceName: string, data: unknown): Promise<unknown>;
+  createRecord<T = unknown>(
+    resourceName: string,
+    data: CreateEntity<T>
+  ): Promise<EntityWithBase<T>>;
 
   /**
    * Update an existing record
+   * @template T - The entity type to update
    * @param resourceName - Name of the resource
    * @param id - Record identifier
    * @param data - Updated record data
-   * @returns Promise resolving to the updated record
+   * @returns Promise resolving to the updated record with base entity fields
    * @throws {ValidationError} When record data is invalid
    * @throws {ApiClientError} When API request fails
    */
-  updateRecord(
+  updateRecord<T = unknown>(
     resourceName: string,
     id: string,
-    data: unknown
-  ): Promise<unknown>;
+    data: Partial<CreateEntity<T>>
+  ): Promise<EntityWithBase<T>>;
 
   /**
    * Delete a record by ID
@@ -221,20 +254,27 @@ export interface IApiClient {
 
   /**
    * Find a specific record by ID
+   * @template T - The entity type to return
    * @param resourceName - Name of the resource
    * @param id - Record identifier
-   * @returns Promise resolving to the found record
+   * @returns Promise resolving to the found record with base entity fields
    * @throws {ApiClientError} When record is not found or API request fails
    */
-  findRecordById(resourceName: string, id: string): Promise<unknown>;
+  findRecordById<T = unknown>(
+    resourceName: string,
+    id: string
+  ): Promise<EntityWithBase<T>>;
 
   /**
    * Find records with pagination and optional search
+   * @template T - The entity type to return
    * @param params - Query parameters including resource name, pagination, and search
-   * @returns Promise resolving to paginated response
+   * @returns Promise resolving to paginated response with entities containing base fields
    * @throws {ApiClientError} When API request fails
    */
-  findRecords(params: FindRecordsParams): Promise<PaginatedResponse>;
+  findRecords<T = unknown>(
+    params: FindRecordsParams
+  ): Promise<PaginatedResponse<EntityWithBase<T>>>;
 
   // Token management
   /**

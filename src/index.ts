@@ -19,6 +19,12 @@ export {
 } from "./client.js";
 
 // =============================================================================
+// BASE CLIENT EXPORTS
+// =============================================================================
+
+export { BaseDataSourceClient, DataSourceClient } from "./base-client.js";
+
+// =============================================================================
 // TYPE EXPORTS
 // =============================================================================
 
@@ -36,6 +42,11 @@ export type {
   // Response types
   PaginatedResponse,
   PaginationMeta,
+
+  // Entity types
+  BaseEntity,
+  CreateEntity,
+  EntityWithBase,
 
   // Error types
   ApiError,

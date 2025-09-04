@@ -70,6 +70,7 @@ interface RequestParams {
  *   name: 'John Doe',
  *   email: 'john@example.com'
  * });
+ * // newUser will have id, created_at, updated_at fields added
  * ```
  */
 export class ZDataClient implements IApiClient {
@@ -200,27 +201,36 @@ export class ZDataClient implements IApiClient {
   /**
    * Create a new record in the specified resource
    *
-   * @param resourceName - Name of the resource (e.g., 'users', 'products')
-   * @param data - Record data to create
-   * @returns Promise resolving to the created record
+   * @template T - The entity type to create
+   * @param resourceName - Name of the resource to create record in
+   * @param data - Record data to create (without base entity fields)
+   * @returns Promise resolving to the created record with base entity fields
    * @throws {ValidationError} When record data is invalid
    * @throws {ApiClientError} When API request fails
    *
    * @example
    * ```typescript
-   * const newUser = await client.createRecord('users', {
-   *   name: 'Jane Smith',
-   *   email: 'jane@example.com',
-   *   role: 'admin'
+   * interface User {
+   *   name: string;
+   *   email: string;
+   * }
+   *
+   * const newUser = await client.createRecord<User>('users', {
+   *   name: 'John Doe',
+   *   email: 'john@example.com'
    * });
-   * console.log('Created user with ID:', newUser.id);
+   * // newUser will have id, created_at, updated_at fields added
    * ```
    */
-  public async createRecord(
+  public async createRecord<T = unknown>(
     resourceName: string,
-    data: unknown
-  ): Promise<unknown> {
+    data: import("./types.js").CreateEntity<T>
+  ): Promise<import("./types.js").EntityWithBase<T>> {
     this.validateResourceName(resourceName);
+
+    if (!data || typeof data !== "object") {
+      throw new ValidationError("Record data must be a valid object");
+    }
 
     return this.makeRequest({
       method: "post",
@@ -232,29 +242,38 @@ export class ZDataClient implements IApiClient {
   /**
    * Update an existing record
    *
+   * @template T - The entity type to update
    * @param resourceName - Name of the resource
-   * @param id - Record identifier
-   * @param data - Updated record data (partial updates supported)
-   * @returns Promise resolving to the updated record
+   * @param id - Unique identifier of the record to update
+   * @param data - Partial record data to update (without base entity fields)
+   * @returns Promise resolving to the updated record with base entity fields
    * @throws {ValidationError} When record data is invalid
-   * @throws {ApiClientError} When record is not found or API request fails
+   * @throws {ApiClientError} When API request fails
    *
    * @example
    * ```typescript
-   * const updatedUser = await client.updateRecord('users', 'user-123', {
-   *   name: 'Jane Doe',
-   *   role: 'superadmin'
+   * interface User {
+   *   name: string;
+   *   email: string;
+   * }
+   *
+   * const updatedUser = await client.updateRecord<User>('users', 'user-123', {
+   *   name: 'John Smith'
    * });
-   * console.log('Updated user:', updatedUser.name);
+   * // updatedUser will have all fields including updated updated_at
    * ```
    */
-  public async updateRecord(
+  public async updateRecord<T = unknown>(
     resourceName: string,
     id: string,
-    data: unknown
-  ): Promise<unknown> {
+    data: Partial<import("./types.js").CreateEntity<T>>
+  ): Promise<import("./types.js").EntityWithBase<T>> {
     this.validateResourceName(resourceName);
     this.validateId(id);
+
+    if (!data || typeof data !== "object") {
+      throw new ValidationError("Record data must be a valid object");
+    }
 
     return this.makeRequest({
       method: "put",
@@ -290,21 +309,28 @@ export class ZDataClient implements IApiClient {
   /**
    * Find a specific record by ID
    *
+   * @template T - The entity type to return
    * @param resourceName - Name of the resource
    * @param id - Record identifier
-   * @returns Promise resolving to the found record
+   * @returns Promise resolving to the found record with base entity fields
    * @throws {ApiClientError} When record is not found or API request fails
    *
    * @example
    * ```typescript
-   * const user = await client.findRecordById('users', 'user-123');
+   * interface User {
+   *   name: string;
+   *   email: string;
+   * }
+   *
+   * const user = await client.findRecordById<User>('users', 'user-123');
+   * // user will have id, created_at, updated_at fields included
    * console.log('Found user:', user.name);
    * ```
    */
-  public async findRecordById(
+  public async findRecordById<T = unknown>(
     resourceName: string,
     id: string
-  ): Promise<unknown> {
+  ): Promise<import("./types.js").EntityWithBase<T>> {
     this.validateResourceName(resourceName);
     this.validateId(id);
 
@@ -317,13 +343,19 @@ export class ZDataClient implements IApiClient {
   /**
    * Find records with pagination and optional search
    *
+   * @template T - The entity type to return
    * @param params - Query parameters including resource name, pagination, and search
-   * @returns Promise resolving to paginated response with records and metadata
+   * @returns Promise resolving to paginated response with records containing base entity fields
    * @throws {ApiClientError} When API request fails
    *
    * @example
    * ```typescript
-   * const result = await client.findRecords({
+   * interface User {
+   *   name: string;
+   *   email: string;
+   * }
+   *
+   * const result = await client.findRecords<User>({
    *   resourceName: 'users',
    *   page: 1,
    *   limit: 10,
@@ -331,16 +363,19 @@ export class ZDataClient implements IApiClient {
    * });
    *
    * console.log(`Found ${result.meta.totalRecords} users`);
-   * result.records.forEach(user => console.log(user.name));
+   * result.records.forEach(user => {
+   *   // user has id, created_at, updated_at fields included
+   *   console.log(user.name, user.id);
+   * });
    *
    * if (result.meta.hasNext) {
    *   console.log('More results available');
    * }
    * ```
    */
-  public async findRecords(
+  public async findRecords<T = unknown>(
     params: FindRecordsParams
-  ): Promise<PaginatedResponse> {
+  ): Promise<PaginatedResponse<import("./types.js").EntityWithBase<T>>> {
     this.validateResourceName(params.resourceName);
 
     const searchParams = this.buildSearchParams(params);
