@@ -134,6 +134,15 @@ export abstract class BaseDataSourceClient<T> extends ZDataClient {
   public async delete(id: string): Promise<void> {
     return this.deleteRecord(this.resourceName, id);
   }
+
+  /**
+   * Get the resource name for this client
+   *
+   * @returns The resource name
+   */
+  public getResourceName(): string {
+    return this.resourceName;
+  }
 }
 
 /**
